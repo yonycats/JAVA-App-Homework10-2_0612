@@ -1,20 +1,13 @@
 package main;
 
-import java.io.IOException;
-import java.io.Reader;
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
 
-import org.apache.ibatis.exceptions.PersistenceException;
-import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-
+import service.BoardServiceImpl;
+import service.IBoardService;
 import vo.BoardVO;
 
 /*
@@ -49,33 +42,13 @@ create sequence board_seq
 
 public class BoardMain {
 	
-	
 	private Scanner sc = new Scanner(System.in);
+	private IBoardService boardService = BoardServiceImpl.getInstance();
 	final int pageSize = 5;
-	private static SqlSessionFactory SqlSessionFactory = null; 
 	
 	public static void main(String[] args) {
 		BoardMain obj = new BoardMain();
-		obj.sqlSession();
 		obj.start();
-	}
-
-	
-	private void sqlSession() {
-		
-		try {
-			Charset charset = Charset.forName("UTF-8");
-			Resources.setCharset(charset);
-			
-			Reader rd = Resources.getResourceAsReader("config/mybatis-config.xml");
-			
-			SqlSessionFactory = new SqlSessionFactoryBuilder().build(rd);
-			
-			rd.close();
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 
@@ -117,8 +90,6 @@ public class BoardMain {
 
 
 	private void searchBoard() {
-		SqlSession session = SqlSessionFactory.openSession(true); 
-		
 		System.out.println("어떤 것으로 검색할까요?");
 		System.out.println("1. 날짜");
 		System.out.println("2. 작성자");
@@ -158,32 +129,24 @@ public class BoardMain {
 //			BoardVO bv = new BoardVO();
 //			bv.setDate(dateTime);
 			
-			
-			try {
-				List<BoardVO> dateSearch = session.selectList("Board.dateSearch", dateSel);
-				
-				System.out.println();
-				System.out.println("======= 목록 보기 (날짜순 정렬) =======");
-				for (BoardVO boardVO : dateSearch) {
-					BigDecimal no = (BigDecimal) boardVO.getNo();
-					
-					LocalDateTime date = (LocalDateTime) boardVO.getDate();
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-					String dateStr = date.format(formatter);
-					
-					String writter = (String) boardVO.getWriter();
-					String title = (String) boardVO.getTitle();
-					String content = (String) boardVO.getContent();
-					
-					System.out.println("No." + no + "\t[" + dateStr + "]\t[작성자] " + writter + "\t[제목] " + title + "\t[내용] " + content);
-				}
-			} catch (PersistenceException e) {
-				e.printStackTrace();
-			} finally {
-				session.close();
+			List<BoardVO> dateSearch = boardService.dateSearchBoardSv(dateSel);
+
+			System.out.println();
+			System.out.println("======= 목록 보기 (날짜순 정렬) =======");
+			for (BoardVO boardVO : dateSearch) {
+				BigDecimal no = (BigDecimal) boardVO.getNo();
+
+				LocalDateTime date = (LocalDateTime) boardVO.getDate();
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+				String dateStr = date.format(formatter);
+
+				String writter = (String) boardVO.getWriter();
+				String title = (String) boardVO.getTitle();
+				String content = (String) boardVO.getContent();
+
+				System.out.println("No." + no + "\t[" + dateStr + "]\t[작성자] " + writter + "\t[제목] " + title + "\t[내용] " + content);
 			}
-			
-			
+
 		} else if (sel.equals("2")) {
 			// 작성자 검색
 
@@ -192,33 +155,25 @@ public class BoardMain {
 			
 			BoardVO bv = new BoardVO();
 			bv.setWriter(writterSel);
-			
-			
-			try {
-				List<BoardVO> writerSearch = session.selectList("Board.searchBoard", bv);
-				
-				System.out.println();
-				System.out.println("======= 목록 보기 (날짜순 정렬) =======");
-				for (BoardVO boardVO : writerSearch) {
-					BigDecimal no = (BigDecimal) boardVO.getNo();
-					
-					LocalDateTime date = (LocalDateTime) boardVO.getDate();
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-					String dateStr = date.format(formatter);
-					
-					String writer = (String) boardVO.getWriter();
-					String title = (String) boardVO.getTitle();
-					String content = (String) boardVO.getContent();
-					
-					System.out.println("No." + no + "\t[" + dateStr + "] [작성자] " + writer + "\t[제목] " + title + "\t[내용] " + content);
-				}
-			} catch (PersistenceException e) {
-				e.printStackTrace();
-			} finally {
-				session.close();
+
+			List<BoardVO> writerSearch = boardService.searchBoardSv(bv);
+
+			System.out.println();
+			System.out.println("======= 목록 보기 (날짜순 정렬) =======");
+			for (BoardVO boardVO : writerSearch) {
+				BigDecimal no = (BigDecimal) boardVO.getNo();
+
+				LocalDateTime date = (LocalDateTime) boardVO.getDate();
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+				String dateStr = date.format(formatter);
+
+				String writer = (String) boardVO.getWriter();
+				String title = (String) boardVO.getTitle();
+				String content = (String) boardVO.getContent();
+
+				System.out.println("No." + no + "\t[" + dateStr + "] [작성자] " + writer + "\t[제목] " + title + "\t[내용] " + content);
 			}
 
-			
 		} else if (sel.equals("3")) {
 			// 제목 검색
 			
@@ -227,33 +182,25 @@ public class BoardMain {
 			
 			BoardVO bv = new BoardVO();
 			bv.setTitle(titleSel);
-			
-			
-			try {
-				List<BoardVO> titleSearch = session.selectList("Board.searchBoard", bv);
-				
-				System.out.println();
-				System.out.println("======= 목록 보기 (날짜순 정렬) =======");
-				for (BoardVO boardVO : titleSearch) {
-					BigDecimal no = (BigDecimal) boardVO.getNo();
-					
-					LocalDateTime date = (LocalDateTime) boardVO.getDate();
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-					String dateStr = date.format(formatter);
-					
-					String writter = (String) boardVO.getWriter();
-					String title = (String) boardVO.getTitle();
-					String content = (String) boardVO.getContent();
-					
-					System.out.println("No." + no + "\t[" + dateStr + "]\t[작성자] " + writter + "\t[제목] " + title + "\t[내용] " + content);
-				}
-			} catch (PersistenceException e) {
-				e.printStackTrace();
-			} finally {
-				session.close();
+
+			List<BoardVO> titleSearch = boardService.searchBoardSv(bv);
+
+			System.out.println();
+			System.out.println("======= 목록 보기 (날짜순 정렬) =======");
+			for (BoardVO boardVO : titleSearch) {
+				BigDecimal no = (BigDecimal) boardVO.getNo();
+
+				LocalDateTime date = (LocalDateTime) boardVO.getDate();
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+				String dateStr = date.format(formatter);
+
+				String writter = (String) boardVO.getWriter();
+				String title = (String) boardVO.getTitle();
+				String content = (String) boardVO.getContent();
+
+				System.out.println("No." + no + "\t[" + dateStr + "]\t[작성자] " + writter + "\t[제목] " + title + "\t[내용] " + content);
 			}
-			
-			
+
 		} else if (sel.equals("4")) {
 			// 내용 검색
 			
@@ -262,40 +209,30 @@ public class BoardMain {
 			
 			BoardVO bv = new BoardVO();
 			bv.setContent(contentSel);
-			
-			
-			try {
-				List<BoardVO> contentSearch = session.selectList("Board.searchBoard", bv);
-				
-				System.out.println();
-				System.out.println("======= 목록 보기 (날짜순 정렬) =======");
-				for (BoardVO boardVO : contentSearch) {
-					BigDecimal no = (BigDecimal) boardVO.getNo();
-					
-					LocalDateTime date = (LocalDateTime) boardVO.getDate();
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-					String dateStr = date.format(formatter);
-					
-					String writter = (String) boardVO.getWriter();
-					String title = (String) boardVO.getTitle();
-					String content = (String) boardVO.getContent();
-					
-					System.out.println("No." + no + "\t[" + dateStr + "]\t[작성자] " + writter + "\t[제목] " + title + "\t[내용] " + content);
-				}
-			} catch (PersistenceException e) {
-				e.printStackTrace();
-			} finally {
-				session.close();
+
+			List<BoardVO> contentSearch = boardService.searchBoardSv(bv);
+
+			System.out.println();
+			System.out.println("======= 목록 보기 (날짜순 정렬) =======");
+			for (BoardVO boardVO : contentSearch) {
+				BigDecimal no = (BigDecimal) boardVO.getNo();
+
+				LocalDateTime date = (LocalDateTime) boardVO.getDate();
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+				String dateStr = date.format(formatter);
+
+				String writter = (String) boardVO.getWriter();
+				String title = (String) boardVO.getTitle();
+				String content = (String) boardVO.getContent();
+
+				System.out.println("No." + no + "\t[" + dateStr + "]\t[작성자] " + writter + "\t[제목] " + title + "\t[내용] " + content);
 			}
-			
-			
+
 		} else return;
 	}
 
 
 	private void deleteBoard() {
-		SqlSession session = SqlSessionFactory.openSession(true); 
-		
 		System.out.println();
 		System.out.println("삭제할 게시물을 확인하신 후, 1. 뒤로가기를 눌러주세요.");
 		printAll();
@@ -315,18 +252,10 @@ public class BoardMain {
 		if (sel==1) {
 			BoardVO bv = new BoardVO(); 
 			bv.setNo(no);
-			
-			
-			try {
-				int cnt = session.delete("Board.deleteBoard", bv);
-				printResult(cnt);
-			} catch (PersistenceException e) {
-				e.printStackTrace();
-			} finally {
-				session.close();				
-			}
-			
-			
+
+			int cnt = boardService.deleteBoardSv(bv);
+			printResult(cnt);
+
 		} else if (sel==2) { 
 			System.out.println("삭제가 취소되었습니다.");
 		}
@@ -334,8 +263,6 @@ public class BoardMain {
 
 
 	private void updateBoard() {
-		SqlSession session = SqlSessionFactory.openSession(true); 
-		
 		System.out.println();
 		System.out.println("수정할 게시물을 확인하신 후, 1. 뒤로가기를 눌러주세요.");
 		
@@ -360,24 +287,13 @@ public class BoardMain {
 		bv.setWriter(writer);
 		bv.setContent(content);
 		bv.setNo(no);
-		
-		
-		try {
-			int cnt = session.update("Board.updateBoard", bv);
-			printResult(cnt);
-		} catch (PersistenceException e) {
-			e.printStackTrace();
-		} finally {
-			session.close();				
-		}
-		
-		
+
+		int cnt = boardService.updateBoardSv(bv);
+		printResult(cnt);
 	}
 
 
 	private void insertBoard() {
-		SqlSession session = SqlSessionFactory.openSession(true); 
-		
 		System.out.println("게시판에 추가할 내용을 작성하세요.");
 		System.out.println();
 		
@@ -395,32 +311,18 @@ public class BoardMain {
 		bv.setWriter(writer);
 		bv.setContent(content);
 		
-		
-		try {
-			int cnt = session.insert("Board.insertBoard", bv);
-			printResult(cnt);
-		} catch (PersistenceException e) {
-			e.printStackTrace();
-		} finally {
-			session.close();				
-		}
-		
-		
+		int cnt = boardService.insertBoardSv(bv);
+		printResult(cnt);
 	}
 
 
 	private void printAll() {
-		SqlSession session = SqlSessionFactory.openSession(true);
-		
 		System.out.println();
 		System.out.println("======= 전체 목록 보기 (날짜순 정렬) =======");
 
 		int page = 1;
 		boolean end = false;
 
-		
-		try {
-		
 		while (true) {
 
 			int prePage = (page-1) * pageSize +1;
@@ -432,7 +334,7 @@ public class BoardMain {
 			bv.setNextPage(nextPage);
 			
 
-			List<BoardVO> printList =  session.selectList("Board.printAllBoard", bv);
+			List<BoardVO> printList =  boardService.printAllSv(bv);
 
 			if (printList.isEmpty()) {
 				System.out.println("마지막 페이지입니다.");
@@ -479,14 +381,6 @@ public class BoardMain {
 				break;
 			}
 		}
-		
-		} catch (PersistenceException e) {
-			e.printStackTrace();
-		} finally {
-			session.close();
-		}
-		
-		
 	}
 	
 	

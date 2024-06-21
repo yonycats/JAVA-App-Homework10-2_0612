@@ -7,7 +7,7 @@
 	<insert id="insertBoard" parameterType="vo.BoardVO">
 		
 	INSERT INTO JDBC_BOARD (BOARD_NO, BOARD_TITLE, BOARD_WRITER, BOARD_DATE, BOARD_CONTENT) 
-	VALUES ( (SELECT NVL(MAX(BOARD_NO),0)+1 FROM JDBC_BOARD) , #{title}, #{writer}, SYSDATE, #{content})
+	VALUES ( (SELECT NVL(MAX(BOARD_NO),0)+1 FROM JDBC_BOARD) , #{Title}, #{writer}, SYSDATE, #{content})
 	
 	</insert>
 	
